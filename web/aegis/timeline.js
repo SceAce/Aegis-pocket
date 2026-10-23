@@ -48,38 +48,63 @@ export function actionLabel(row) {
     return row.tool_name || row.action_id || "action";
 }
 
-/** One-line summary for the collapsed row. */
+/**
+ * One-line summary for the collapsed row, as a translation key plus variables.
+ *
+ * Status/tool/digest VALUES stay raw (they are protocol data); only the sentence
+ * around them is localized.
+ */
 export function summaryOf(row) {
     switch (row.kind) {
         case "episode":
-            return "task started";
+            return { key: "summary.taskStarted" };
         case "prompt":
-            return row.prompt_chars === null ? "prompt" : `prompt · ${row.prompt_chars} chars`;
+            return row.prompt_chars === null
+                ? { key: "summary.prompt" }
+                : { key: "summary.promptChars", vars: { chars: row.prompt_chars } };
         case "message":
-            return row.role === "assistant" ? "assistant" : `${row.role ?? "message"}`;
+            return row.role === "assistant"
+                ? { key: "summary.assistant" }
+                : { key: "row.kindMessage", vars: { types: row.role ?? "message" } };
         case "action-requested":
-            return `${actionLabel(row)} requested`;
+            return { key: "summary.actionRequested", vars: { tool: actionLabel(row) } };
         case "action-completed":
-            return `${actionLabel(row)} · ${row.status ?? "unknown"}`;
+            return {
+                key: "summary.actionCompleted",
+                vars: { tool: actionLabel(row), status: row.status ?? "unknown" },
+            };
         case "settled":
             return row.context_usage?.known
-                ? `settled · ${Math.round(row.context_usage.percent)}% context`
-                : "settled";
+                ? {
+                      key: "summary.settledContext",
+                      vars: { percent: Math.round(row.context_usage.percent) },
+                  }
+                : { key: "summary.settled" };
         case "rotation":
-            return "Session rotated (same Episode)";
+            return { key: "summary.rotation" };
         case "review":
-            return `work review · ${row.retrieval_status ?? "unknown"}`;
+            return { key: "summary.review", vars: { status: row.retrieval_status ?? "unknown" } };
         case "checkpoint":
-            return "round checkpoint";
+            return { key: "summary.checkpoint" };
         case "knowledge":
-            return `knowledge · ${row.status ?? "unknown"}`;
+            return { key: "summary.knowledge", vars: { status: row.status ?? "unknown" } };
         case "outcome":
-            return `outcome · ${row.status ?? "unknown"}`;
+            return { key: "summary.outcome", vars: { status: row.status ?? "unknown" } };
         case "request":
-            return row.provider_bound ? "provider request" : "request refused";
+            return row.provider_bound
+                ? { key: "summary.request" }
+                : {
+                      key: "summary.requestRefused",
+                      vars: { reason: row.refusal_reason ?? "unknown" },
+                  };
         case "session":
-            return `session ${row.event_type === "session.started" ? "started" : "shutdown"}`;
+            return {
+                key:
+                    row.event_type === "session.started"
+                        ? "summary.sessionStarted"
+                        : "summary.sessionShutdown",
+            };
         default:
-            return row.event_type ?? "event";
+            return { key: "summary.event", vars: { type: row.event_type ?? "event" } };
     }
 }
