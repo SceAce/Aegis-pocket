@@ -1061,3 +1061,133 @@ label.aw-tool input {
     padding-left: 8px;
     margin-left: -2px;
 }
+
+/* ── board: collapsible content + inline evidence ─────────── */
+.aw-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+button.aw-inline-toggle {
+    justify-self: start;
+    padding: 4px 6px;
+    min-height: 26px;
+    font: 11px / 1.2 var(--mono);
+    color: var(--muted);
+}
+
+button.aw-inline-toggle:hover {
+    color: var(--text);
+    background: var(--hover);
+}
+
+.aw-node-details {
+    margin-left: auto;
+    min-height: 26px;
+    padding: 4px 6px;
+    font: 11px / 1.2 var(--mono);
+    color: var(--muted);
+}
+
+.aw-refs {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0 0;
+    display: grid;
+    gap: 4px;
+    font: 11px / 1.45 var(--mono);
+}
+
+.aw-refs li {
+    display: grid;
+    gap: 1px;
+    padding: 4px 6px;
+    border-left: 2px solid var(--line-strong);
+    overflow-wrap: anywhere;
+}
+
+.aw-refs code {
+    color: var(--text);
+    font-size: 11px;
+}
+
+.aw-pre-wrap {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 12.5px;
+}
+
+/* ── top bar: model switcher popover ─────────────────────── */
+.aw-pop-host {
+    position: relative;
+    display: inline-flex;
+}
+
+button.aw-chip-button {
+    cursor: pointer;
+    color: var(--text);
+    border-color: var(--line-strong);
+}
+
+button.aw-chip-button:hover:not(:disabled) {
+    background: var(--hover);
+}
+
+button.aw-chip-button:disabled {
+    cursor: default;
+    opacity: 0.7;
+}
+
+.aw-pop {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 60;
+    width: min(320px, 82vw);
+    max-height: min(60vh, 420px);
+    overflow-y: auto;
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    background: var(--bg);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    padding: 6px;
+    display: grid;
+    gap: 2px;
+}
+
+.aw-pop-head {
+    font: 600 11px / 1.3 var(--sans);
+    color: var(--muted);
+    padding: 4px 6px 6px;
+}
+
+.aw-pop-empty {
+    font: 11.5px / 1.5 var(--mono);
+    color: var(--muted);
+    padding: 6px;
+}
+
+button.aw-pop-item {
+    display: grid;
+    gap: 1px;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    color: var(--body);
+    border-radius: 8px;
+    padding: 7px 8px;
+    min-height: 40px;
+    cursor: pointer;
+    font: 12.5px / 1.3 var(--mono);
+}
+
+button.aw-pop-item:hover {
+    background: var(--hover);
+}
+
+button.aw-pop-item[aria-current="true"] {
+    background: var(--raised);
+    box-shadow: inset 2px 0 0 var(--accent);
+}

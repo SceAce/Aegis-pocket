@@ -416,8 +416,7 @@ function TranscriptRow({ row }) {
                         ? t("row.sessionStarted")
                         : t("row.sessionShutDown")
                 }
-                ·
-                ${shortSession(row.session_id)} · ${when(row.recorded_at)}
+                ${" · "}${shortSession(row.session_id)}${" · "}${when(row.recorded_at)}
             </div>
         </div>`;
     }
@@ -640,14 +639,86 @@ function ProgressPanel({ view, status, host }) {
     <//>`;
 }
 
-function BoardPanel({ view }) {
+function BoardNode({ node, rowsById, onOpenDetails }) {
+    const [openText, setOpenText] = useState(false);
+    const [openRefs, setOpenRefs] = useState(false);
+    const text = node.text ?? "";
+    const long = text.length > 220;
+    const refs = [...new Set([...(node.evidence_refs ?? []), ...(node.source_refs ?? [])])];
+
+    return html`<li class="aw-item" key=${node.node_id}>
+        <div class="aw-item-head">
+            <${Badge} tone=${node.effective ? "ok" : null}>${node.type}<//>
+            <span class="aw-faint"
+                >${node.effective ? t("common.effective") : t("common.superseded")}</span
+            >
+            ${node.scope ? html`<span class="aw-faint">${node.scope}</span>` : null}
+            <button class="aw-tab aw-node-details" onClick=${() => onOpenDetails(node)}>
+                ${t("board.openDetails")}
+            </button>
+        </div>
+        <p class=${long && !openText ? "aw-clamp" : ""}>${text}</p>
+        ${
+            long
+                ? html`<button class="aw-tab aw-inline-toggle" onClick=${() => setOpenText(!openText)}>
+                      ${openText ? t("board.showLess") : t("board.showMore")}
+                  </button>`
+                : null
+        }
+        ${
+            refs.length > 0
+                ? html`<button
+                      class="aw-tab aw-inline-toggle"
+                      aria-expanded=${openRefs}
+                      onClick=${() => setOpenRefs(!openRefs)}
+                  >
+                      ${
+                          openRefs
+                              ? t("board.evidenceHide")
+                              : t("board.evidenceCount", { n: refs.length })
+                      }
+                  </button>`
+                : null
+        }
+        ${
+            openRefs
+                ? html`<ul class="aw-refs">
+                      ${refs.map((id) => {
+                          const row = rowsById.get(id) ?? null;
+
+                          return html`<li key=${id}>
+                              <code>${id.slice(0, 18)}</code>
+                              <span class="aw-faint"
+                                  >${
+                                      row
+                                          ? t(summaryOf(row).key, summaryOf(row).vars)
+                                          : t("board.refOutside")
+                                  }</span
+                              >
+                          </li>`;
+                      })}
+                  </ul>`
+                : null
+        }
+    </li>`;
+}
+
+function BoardPanel({ view, rows = [] }) {
     const board = view?.board ?? { nodes: [], counts: {} };
     const [type, setType] = useState("all");
     const [selected, setSelected] = useState(null);
+    const detailsRef = useRef(null);
+    const rowsById = useMemo(() => new Map(rows.map((row) => [row.event_id, row])), [rows]);
     const nodes = useMemo(
         () => (board.nodes ?? []).filter((node) => type === "all" || node.type === type),
         [board.nodes, type],
     );
+
+    useEffect(() => {
+        if (selected) {
+            detailsRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }
+    }, [selected]);
 
     return html`<${Fragment}>
         <${Section} title=${t("board.title")}>
@@ -686,82 +757,81 @@ function BoardPanel({ view }) {
                     ? html`<div class="aw-empty">${t("board.empty")}</div>`
                     : html`<ul class="aw-list-flat">
                           ${nodes.map(
-                              (node) => html`<li class="aw-item" key=${node.node_id}>
-                                  <div class="aw-item-head">
-                                      <${Badge} tone=${node.effective ? "ok" : null}>${node.type}<//>
-                                      <span class="aw-faint"
-                                          >${
-                                              node.effective
-                                                  ? t("common.effective")
-                                                  : t("common.superseded")
-                                          }</span
-                                      >
-                                      ${
-                                          node.scope
-                                              ? html`<span class="aw-faint">${node.scope}</span>`
-                                              : null
-                                      }
-                                  </div>
-                                  <p>${node.text}</p>
-                                  <div class="aw-item-head">
-                                      <button class="aw-tab" onClick=${() => setSelected(node)}>
-                                          ${t("common.evidence")}
-                                      </button>
-                                      <span class="aw-faint"
-                                          >${node.origin_event_id?.slice(0, 12) ?? ""}</span
-                                      >
-                                  </div>
-                              </li>`,
+                              (node) => html`<${BoardNode}
+                                  key=${node.node_id}
+                                  node=${node}
+                                  rowsById=${rowsById}
+                                  onOpenDetails=${setSelected}
+                              />`,
                           )}
                       </ul>`
             }
         <//>
         ${
             selected
-                ? html`<${Section}
-                      title=${t("board.nodeDetails")}
-                      actions=${html`<button class="aw-tab" onClick=${() => setSelected(null)}>
-                          ${t("common.close")}
-                      </button>`}
-                  >
-                      <${Facts} rows=${[
-                          [t("board.node"), selected.node_id],
-                          [t("board.type"), selected.type],
-                          [t("progress.status"), selected.status],
-                          [t("board.scope"), selected.scope],
-                          [t("board.criterion"), selected.criterion],
-                          [t("board.origin"), selected.origin_event_id],
-                          [t("board.action"), selected.action_id],
-                          [t("board.tool"), selected.tool_name],
-                          [t("board.outcome"), selected.outcome_id],
-                          [t("board.supersededBy"), selected.superseded_by],
-                      ]} />
-                      ${
-                          selected.observation_summary
-                              ? html`<pre class="aw-file-text">${JSON.stringify(
-                                    selected.observation_summary,
-                                    null,
-                                    2,
-                                )}</pre>`
-                              : null
-                      }
-                      ${
-                          selected.evidence_refs?.length
-                              ? html`<div class="aw-faint">
-                                    ${t("common.evidence")}: ${selected.evidence_refs.join(", ")}
-                                </div>`
-                              : html`<div class="aw-muted">${t("board.noEvidence")}</div>`
-                      }
-                      ${
-                          selected.source_refs?.length
-                              ? html`<div class="aw-faint">
-                                    ${t("board.sources", {
-                                        value: selected.source_refs.join(", "),
-                                    })}
-                                </div>`
-                              : null
-                      }
-                  <//>`
+                ? html`<div ref=${detailsRef}>
+                      <${Section}
+                          title=${t("board.nodeDetails")}
+                          actions=${html`<button class="aw-tab" onClick=${() => setSelected(null)}>
+                              ${t("common.close")}
+                          </button>`}
+                      >
+                          <${Facts} rows=${[
+                              [t("board.node"), selected.node_id],
+                              [t("board.type"), selected.type],
+                              [t("progress.status"), selected.status],
+                              [t("board.scope"), selected.scope],
+                              [t("board.criterion"), selected.criterion],
+                              [t("board.origin"), selected.origin_event_id],
+                              [t("board.action"), selected.action_id],
+                              [t("board.tool"), selected.tool_name],
+                              [t("board.outcome"), selected.outcome_id],
+                              [t("board.supersededBy"), selected.superseded_by],
+                          ]} />
+                          <div class="aw-body aw-pre-wrap">${selected.text ?? ""}</div>
+                          ${
+                              selected.observation_summary
+                                  ? html`<pre class="aw-file-text">${JSON.stringify(
+                                        selected.observation_summary,
+                                        null,
+                                        2,
+                                    )}</pre>`
+                                  : null
+                          }
+                          ${
+                              [...(selected.evidence_refs ?? [])].length > 0
+                                  ? html`<ul class="aw-refs">
+                                        ${[...selected.evidence_refs].map((id) => {
+                                            const row = rowsById.get(id) ?? null;
+
+                                            return html`<li key=${id}>
+                                                <code>${id}</code>
+                                                <span class="aw-faint"
+                                                    >${
+                                                        row
+                                                            ? t(
+                                                                  summaryOf(row).key,
+                                                                  summaryOf(row).vars,
+                                                              )
+                                                            : t("board.refOutside")
+                                                    }</span
+                                                >
+                                            </li>`;
+                                        })}
+                                    </ul>`
+                                  : html`<div class="aw-muted">${t("board.noEvidence")}</div>`
+                          }
+                          ${
+                              selected.source_refs?.length
+                                  ? html`<div class="aw-faint">
+                                        ${t("board.sources", {
+                                            value: selected.source_refs.join(", "),
+                                        })}
+                                    </div>`
+                                  : null
+                          }
+                      <//>
+                  </div>`
                 : null
         }
     <//>`;
@@ -1366,8 +1436,12 @@ function SettingsPanel({ health, theme, setTheme }) {
                 [t("settings.mode"), t("settings.modeValue")],
             ]} />
         <//>
-        <${Section} title=${t("settings.safety")}>
+        <${Section}
+            title=${t("settings.safety")}
+            actions=${html`<${Badge}>${t("settings.safetyReadonly")}<//>`}
+        >
             <div class="aw-muted">${t("settings.safetyNote")}</div>
+            <div class="aw-faint">${t("settings.safetyReadonlyNote")}</div>
         <//>
         <${Section} title=${t("settings.language")}>
             <${LangSwitch} current=${lang} />
@@ -1605,6 +1679,8 @@ function App() {
     const fileRef = useRef(null);
     const [uploading, setUploading] = useState(false);
     const [filesVersion, setFilesVersion] = useState(0);
+    const [liveModels, setLiveModels] = useState(null);
+    const [modelOpen, setModelOpen] = useState(false);
     const chatRef = useRef(null);
     const stickRef = useRef(true);
 
@@ -1764,6 +1840,28 @@ function App() {
         }
     }, [selected]);
 
+    // Deep links and browser back/forward: a changed `#/e/<label>` opens that run.
+    // (The task list uses replaceState, which does not fire this event.)
+    useEffect(() => {
+        const onHashChange = () => {
+            const match = /^#\/e\/(.+)$/.exec(location.hash);
+
+            if (!match) {
+                return;
+            }
+
+            const label = decodeURIComponent(match[1]);
+
+            if (label !== selected) {
+                open(label);
+            }
+        };
+
+        globalThis.addEventListener("hashchange", onHashChange);
+
+        return () => globalThis.removeEventListener("hashchange", onHashChange);
+    }, [open, selected]);
+
     // Follow new committed rows only while the reader is at the bottom.
     useEffect(() => {
         const node = chatRef.current;
@@ -1774,6 +1872,35 @@ function App() {
 
         node.scrollTop = node.scrollHeight;
     }, [rows, liveText]);
+
+    // The switchable models come from the LIVE run (the Host's own runtime), not
+    // from the agent-config catalog: the catalog may list models this run was
+    // never configured for.
+    useEffect(() => {
+        if (!selected) {
+            setLiveModels(null);
+
+            return;
+        }
+
+        let cancelled = false;
+
+        api.liveModels(selected)
+            .then((result) => {
+                if (!cancelled) {
+                    setLiveModels(result);
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setLiveModels({ models: [] });
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [selected, detail?.host?.state, detail?.status?.session_id]);
 
     const status = detail?.status ?? null;
     const view = detail?.view ?? null;
@@ -1834,6 +1961,39 @@ function App() {
     };
 
     /** Upload one file INTO the selected experiment's workspace. */
+    /** Switch the live Session's model (session configuration; not a task fact). */
+    const switchModel = async (provider, id) => {
+        setModelOpen(false);
+
+        if (!selected) {
+            return;
+        }
+
+        try {
+            const result = await api.setModel(selected, { provider, model: id });
+
+            if (!result.ok) {
+                setBanner({
+                    tone: "warn",
+                    text: t("top.modelFailed", { reason: result.reason ?? t("common.unknown") }),
+                });
+
+                return;
+            }
+
+            setBanner({
+                tone: "info",
+                text: t("top.modelApplied", { model: `${provider}/${id}` }),
+            });
+            await loadDetail(selected);
+        } catch (error) {
+            setBanner({
+                tone: "warn",
+                text: t("top.modelFailed", { reason: apiErrorMessage(error) }),
+            });
+        }
+    };
+
     const uploadAttachment = async (event) => {
         const file = event.currentTarget.files?.[0];
 
@@ -2022,11 +2182,56 @@ function App() {
                               >`
                             : null
                     }
-                    ${
-                        status?.model
-                            ? html`<${Chip}>${status.model.provider ?? "?"}/${status.model.id ?? "?"}<//>`
-                            : null
-                    }
+                    <div class="aw-pop-host">
+                        <button
+                            class="aw-chip aw-chip-button"
+                            title=${t("top.modelHint")}
+                            aria-expanded=${modelOpen}
+                            disabled=${!(liveModels?.models?.length ?? 0) || host.state !== "ready"}
+                            onClick=${() => setModelOpen(!modelOpen)}
+                        >
+                            ${
+                                status?.model
+                                    ? `${status.model.provider ?? "?"}/${status.model.id ?? "?"}`
+                                    : t("top.modelUnknown")
+                            }
+                        </button>
+                        ${
+                            modelOpen
+                                ? html`<div class="aw-pop" role="menu" aria-label=${t("top.modelSwitch")}>
+                                      <div class="aw-pop-head">${t("top.modelSwitch")}</div>
+                                      ${
+                                          (liveModels?.models ?? []).length === 0
+                                              ? html`<div class="aw-pop-empty">
+                                                    ${t("dialog.modelsUnavailable")}
+                                                </div>`
+                                              : (liveModels?.models ?? []).map(
+                                                    (row) => html`<button
+                                                        key=${`${row.provider}/${row.id}`}
+                                                        class="aw-pop-item"
+                                                        role="menuitem"
+                                                        aria-current=${
+                                                            status?.model?.provider ===
+                                                                row.provider &&
+                                                            status?.model?.id === row.id
+                                                        }
+                                                        onClick=${() => switchModel(row.provider, row.id)}
+                                                    >
+                                                        <span>${row.name}</span>
+                                                        <span class="aw-faint"
+                                                            >${row.provider}${
+                                                                row.context_window
+                                                                    ? ` · ${Math.round(row.context_window / 1000)}k`
+                                                                    : ""
+                                                            }</span
+                                                        >
+                                                    </button>`,
+                                                )
+                                      }
+                                  </div>`
+                                : null
+                        }
+                    </div>
                     ${
                         view?.session?.context?.known
                             ? html`<${Chip}
@@ -2220,7 +2425,7 @@ function App() {
                             : panel === "progress"
                               ? html`<${ProgressPanel} view=${view} status=${status} host=${host} />`
                               : panel === "board"
-                                ? html`<${BoardPanel} view=${view} />`
+                                ? html`<${BoardPanel} view=${view} rows=${rows} />`
                                 : panel === "knowledge"
                                   ? html`<${KnowledgePanel} view=${view} />`
                                   : panel === "session"
