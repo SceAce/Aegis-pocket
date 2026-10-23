@@ -130,6 +130,12 @@ body {
     min-height: 0;
 }
 
+/* A list can hold hundreds of runs: items keep their height instead of shrinking
+   until the label disappears and the time lands on the card border. */
+.aw-list-body > * {
+    flex: 0 0 auto;
+}
+
 .aw-exp {
     text-align: left;
     border: 1px solid transparent;
@@ -283,6 +289,7 @@ body {
 }
 
 .aw-card {
+    position: relative;
     border: 1px solid var(--line);
     border-radius: 12px;
     background: var(--card);
@@ -303,11 +310,23 @@ body {
     text-transform: none;
 }
 
+/* The time is a small notch on the card's top-right border: it reads as part of
+   the frame, never overlaps the title, and stays out of the way at 9.5px. */
+.aw-card-head {
+    position: relative;
+}
+
 .aw-card-head .aw-when {
-    font: 10px / 1.2 var(--mono);
+    font: 9.5px / 1 var(--mono);
     color: var(--faint);
+    letter-spacing: 0.02em;
     margin-left: auto;
     white-space: nowrap;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 2px 6px 1px;
+    transform: translateY(-1px);
 }
 
 .aw-body {
@@ -723,7 +742,9 @@ button.aw-icon {
 }
 
 .aw-dialog {
-    width: min(460px, 100%);
+    width: min(520px, 100%);
+    max-height: min(92vh, 900px);
+    overflow-y: auto;
     border: 1px solid var(--line-strong);
     border-radius: 16px;
     background: var(--bg);
@@ -865,4 +886,178 @@ button.aw-icon {
     .aw-details {
         transition: none;
     }
+}
+
+/* ── state lines (settled / session) ──────────────────────── */
+/* Meta, not messages: quieter than a bubble, with a thin rule so a turn boundary
+   is visible without shouting. */
+.aw-row[data-kind="settled"] .aw-muted,
+.aw-row[data-kind="session"] .aw-muted {
+    font: 10.5px / 1.5 var(--mono);
+    color: var(--faint);
+    letter-spacing: 0.01em;
+}
+
+/* ── composer attachment button ───────────────────────────── */
+button.aw-plus {
+    width: var(--aw-touch);
+    min-width: var(--aw-touch);
+    height: var(--aw-touch);
+    border-radius: 10px;
+    border: 1px dashed var(--line-strong);
+    background: transparent;
+    color: var(--muted);
+    font: 600 17px / 1 var(--sans);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+}
+
+button.aw-plus:hover:not(:disabled) {
+    background: var(--hover);
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+button.aw-plus:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── new-task tools ───────────────────────────────────────── */
+fieldset.aw-tools {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 8px 10px 10px;
+    margin: 0;
+    display: grid;
+    gap: 6px;
+}
+
+fieldset.aw-tools legend {
+    padding: 0 6px;
+    font: 600 11px / 1.3 var(--sans);
+    color: var(--muted);
+}
+
+.aw-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 4px 10px;
+}
+
+label.aw-tool {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    font: 12px / 1.3 var(--mono);
+    color: var(--body);
+    cursor: pointer;
+}
+
+label.aw-tool input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+}
+
+/* ── colour separation between areas (muted, not loud) ────── */
+/* Each area gets a low-saturation tint of one palette colour so the eye can tell
+   the list, the conversation, the detail tabs and each panel apart. */
+:root {
+    --aw-tint-progress: color-mix(in srgb, var(--accent) 10%, transparent);
+    --aw-tint-board: color-mix(in srgb, var(--cyan) 12%, transparent);
+    --aw-tint-knowledge: color-mix(in srgb, var(--magenta) 10%, transparent);
+    --aw-tint-session: color-mix(in srgb, var(--green) 10%, transparent);
+    --aw-tint-actions: color-mix(in srgb, var(--yellow) 10%, transparent);
+    --aw-tint-files: color-mix(in srgb, var(--blue) 9%, transparent);
+}
+
+.aw-list {
+    background: color-mix(in srgb, var(--body) 2.5%, var(--bg));
+}
+
+.aw-chat {
+    background: color-mix(in srgb, var(--body) 1%, var(--bg));
+}
+
+.aw-details {
+    background: color-mix(in srgb, var(--body) 3%, var(--bg));
+}
+
+.aw-row[data-kind="episode"] .aw-card {
+    background: color-mix(in srgb, var(--accent) 8%, var(--card));
+    border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+}
+
+.aw-user .aw-card {
+    background: color-mix(in srgb, var(--accent) 12%, var(--card));
+    border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+}
+
+.aw-row[data-kind="tool"] .aw-card {
+    background: color-mix(in srgb, var(--cyan) 7%, var(--card));
+    border-color: color-mix(in srgb, var(--cyan) 26%, var(--line));
+}
+
+.aw-row[data-kind="review"] .aw-card {
+    background: color-mix(in srgb, var(--yellow) 8%, var(--card));
+    border-color: color-mix(in srgb, var(--yellow) 30%, var(--line));
+}
+
+.aw-row[data-kind="checkpoint"] .aw-card,
+.aw-row[data-kind="knowledge"] .aw-card {
+    background: color-mix(in srgb, var(--magenta) 7%, var(--card));
+    border-color: color-mix(in srgb, var(--magenta) 24%, var(--line));
+}
+
+.aw-row[data-kind="outcome"] .aw-card {
+    background: color-mix(in srgb, var(--green) 9%, var(--card));
+    border-color: color-mix(in srgb, var(--green) 32%, var(--line));
+}
+
+/* Section headers carry the panel's tint, so the right column reads as five
+   distinct areas without colouring the body text. */
+.aw-panel[data-tone="progress"] .aw-section > h2,
+.aw-panel[data-tone="progress"] .aw-section > h3 {
+    border-left: 2px solid var(--accent);
+    padding-left: 8px;
+    margin-left: -2px;
+}
+
+.aw-panel[data-tone="board"] .aw-section > h2,
+.aw-panel[data-tone="board"] .aw-section > h3 {
+    border-left: 2px solid var(--cyan);
+    padding-left: 8px;
+    margin-left: -2px;
+}
+
+.aw-panel[data-tone="knowledge"] .aw-section > h2,
+.aw-panel[data-tone="knowledge"] .aw-section > h3 {
+    border-left: 2px solid var(--magenta);
+    padding-left: 8px;
+    margin-left: -2px;
+}
+
+.aw-panel[data-tone="session"] .aw-section > h2,
+.aw-panel[data-tone="session"] .aw-section > h3 {
+    border-left: 2px solid var(--green);
+    padding-left: 8px;
+    margin-left: -2px;
+}
+
+.aw-panel[data-tone="actions"] .aw-section > h2,
+.aw-panel[data-tone="actions"] .aw-section > h3 {
+    border-left: 2px solid var(--yellow);
+    padding-left: 8px;
+    margin-left: -2px;
+}
+
+.aw-panel[data-tone="files"] .aw-section > h2,
+.aw-panel[data-tone="files"] .aw-section > h3 {
+    border-left: 2px solid var(--blue);
+    padding-left: 8px;
+    margin-left: -2px;
 }

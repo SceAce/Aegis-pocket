@@ -1159,7 +1159,7 @@ function ActionsPanel({ view }) {
     <//>`;
 }
 
-function FilesPanel({ label, enabled }) {
+function FilesPanel({ label, enabled, version = 0 }) {
     const [path, setPath] = useState("");
     const [listing, setListing] = useState(null);
     const [file, setFile] = useState(null);
@@ -1184,7 +1184,7 @@ function FilesPanel({ label, enabled }) {
         if (enabled) {
             load("");
         }
-    }, [enabled, load]);
+    }, [enabled, load, version]);
 
     const openFile = async (name) => {
         setError(null);
@@ -1385,6 +1385,48 @@ function NewTaskDialog({ onClose, onCreated, defaults }) {
     const [model, setModel] = useState(defaults?.model ?? "");
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState(null);
+    const [catalog, setCatalog] = useState(null);
+    const [toolCatalog, setToolCatalog] = useState(null);
+    const [tools, setTools] = useState(null);
+
+    useEffect(() => {
+        api.models()
+            .then(setCatalog)
+            .catch(() => setCatalog({ models: [], default: null }));
+        api.tools()
+            .then((result) => {
+                setToolCatalog(result);
+                setTools(result.defaults ?? []);
+            })
+            .catch(() => setToolCatalog(null));
+    }, []);
+
+    const grouped = useMemo(() => {
+        const byProvider = new Map();
+
+        for (const row of catalog?.models ?? []) {
+            const list = byProvider.get(row.provider) ?? [];
+
+            list.push(row);
+            byProvider.set(row.provider, list);
+        }
+
+        return [...byProvider.entries()].sort(([a], [b]) => a.localeCompare(b));
+    }, [catalog]);
+
+    const toggleTool = (id) => {
+        setTools((current) => {
+            const set = new Set(current ?? []);
+
+            if (set.has(id)) {
+                set.delete(id);
+            } else {
+                set.add(id);
+            }
+
+            return [...set];
+        });
+    };
 
     const submit = async (event) => {
         event.preventDefault();
@@ -1397,6 +1439,7 @@ function NewTaskDialog({ onClose, onCreated, defaults }) {
                 workspace: workspace.trim() || undefined,
                 provider: provider.trim() || undefined,
                 model: model.trim() || undefined,
+                tools: Array.isArray(tools) && tools.length > 0 ? tools : undefined,
             });
             onCreated(label.trim());
         } catch (err) {
@@ -1405,6 +1448,8 @@ function NewTaskDialog({ onClose, onCreated, defaults }) {
             setBusy(false);
         }
     };
+
+    const hasCatalog = (catalog?.models?.length ?? 0) > 0;
 
     return html`<div class="aw-dialog-scrim" onClick=${(event) => event.target === event.currentTarget && onClose()}>
         <form class="aw-dialog" onSubmit=${submit}>
@@ -1428,24 +1473,100 @@ function NewTaskDialog({ onClose, onCreated, defaults }) {
                     placeholder=${t("dialog.workspacePlaceholder")}
                 />
             </div>
-            <div class="aw-field">
-                <label for="aw-provider">${t("dialog.provider")}</label>
-                <input
-                    id="aw-provider"
-                    value=${provider}
-                    onInput=${(event) => setProvider(event.currentTarget.value)}
-                    placeholder=${t("dialog.providerPlaceholder")}
-                />
-            </div>
-            <div class="aw-field">
-                <label for="aw-model">${t("dialog.model")}</label>
-                <input
-                    id="aw-model"
-                    value=${model}
-                    onInput=${(event) => setModel(event.currentTarget.value)}
-                    placeholder=${t("dialog.modelPlaceholder")}
-                />
-            </div>
+            ${
+                hasCatalog
+                    ? html`<div class="aw-field">
+                          <label for="aw-model-pick">${t("dialog.modelPick")}</label>
+                          <select
+                              id="aw-model-pick"
+                              onChange=${(event) => {
+                                  const value = event.currentTarget.value;
+
+                                  if (!value) {
+                                      setProvider("");
+                                      setModel("");
+
+                                      return;
+                                  }
+
+                                  const [nextProvider, nextModel] = value.split("\u0000");
+
+                                  setProvider(nextProvider);
+                                  setModel(nextModel);
+                              }}
+                          >
+                              <option value="">
+                                  ${t("dialog.modelDefault")}
+                              </option>
+                              ${grouped.map(
+                                  ([
+                                      providerId,
+                                      rows,
+                                  ]) => html`<optgroup key=${providerId} label=${providerId}>
+                                      ${rows.map(
+                                          (row) => html`<option
+                                              key=${`${row.provider}\u0000${row.id}`}
+                                              value=${`${row.provider}\u0000${row.id}`}
+                                              selected=${provider === row.provider && model === row.id}
+                                          >
+                                              ${row.name}${
+                                                  row.context_window
+                                                      ? ` · ${Math.round(row.context_window / 1000)}k`
+                                                      : ""
+                                              }
+                                          </option>`,
+                                      )}
+                                  </optgroup>`,
+                              )}
+                          </select>
+                      </div>`
+                    : html`<${Fragment}>
+                          <div class="aw-field">
+                              <label for="aw-provider">${t("dialog.provider")}</label>
+                              <input
+                                  id="aw-provider"
+                                  value=${provider}
+                                  onInput=${(event) => setProvider(event.currentTarget.value)}
+                                  placeholder=${t("dialog.providerPlaceholder")}
+                              />
+                          </div>
+                          <div class="aw-field">
+                              <label for="aw-model">${t("dialog.model")}</label>
+                              <input
+                                  id="aw-model"
+                                  value=${model}
+                                  onInput=${(event) => setModel(event.currentTarget.value)}
+                                  placeholder=${t("dialog.modelPlaceholder")}
+                              />
+                          </div>
+                          <div class="aw-faint">${t("dialog.modelsUnavailable")}</div>
+                      <//>`
+            }
+            ${
+                toolCatalog
+                    ? html`<fieldset class="aw-field aw-tools">
+                          <legend>${t("dialog.tools")}</legend>
+                          <div class="aw-tools-grid">
+                              ${toolCatalog.coding.map(
+                                  (tool) => html`<label class="aw-tool" key=${tool.id}>
+                                      <input
+                                          type="checkbox"
+                                          checked=${(tools ?? []).includes(tool.id)}
+                                          onChange=${() => toggleTool(tool.id)}
+                                      />
+                                      <span>${t(tool.label_key)}</span>
+                                      ${
+                                          tool.effect
+                                              ? html`<${Badge} tone="warn">${t("dialog.toolsEffect")}<//>`
+                                              : null
+                                      }
+                                  </label>`,
+                              )}
+                          </div>
+                          <div class="aw-faint">${t("dialog.toolsNote")}</div>
+                      </fieldset>`
+                    : null
+            }
             ${error ? html`<div class="aw-banner">${error}</div>` : null}
             <div class="aw-actions">
                 <button class="aw-btn" type="button" onClick=${onClose} disabled=${busy}>
@@ -1481,6 +1602,9 @@ function App() {
     const [requestState, setRequestState] = useState(null);
     const streamRef = useRef(null);
     const requestRef = useRef(null);
+    const fileRef = useRef(null);
+    const [uploading, setUploading] = useState(false);
+    const [filesVersion, setFilesVersion] = useState(0);
     const chatRef = useRef(null);
     const stickRef = useRef(true);
 
@@ -1695,6 +1819,45 @@ function App() {
             await loadDetail(selected);
         } finally {
             setBusy(false);
+        }
+    };
+
+    const toBase64 = async (file) => {
+        const buffer = new Uint8Array(await file.arrayBuffer());
+        let binary = "";
+
+        for (let index = 0; index < buffer.length; index += 0x8000) {
+            binary += String.fromCharCode(...buffer.subarray(index, index + 0x8000));
+        }
+
+        return globalThis.btoa(binary);
+    };
+
+    /** Upload one file INTO the selected experiment's workspace. */
+    const uploadAttachment = async (event) => {
+        const file = event.currentTarget.files?.[0];
+
+        event.currentTarget.value = "";
+
+        if (!file || !selected) {
+            return;
+        }
+
+        setUploading(true);
+
+        try {
+            const data = await toBase64(file);
+
+            await api.upload(selected, { name: file.name, data_base64: data });
+            setBanner({ tone: "info", text: t("composer.uploaded", { name: file.name }) });
+            setFilesVersion((value) => value + 1);
+        } catch (error) {
+            setBanner({
+                tone: "warn",
+                text: t("composer.uploadFailed", { reason: apiErrorMessage(error) }),
+            });
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -1963,6 +2126,23 @@ function App() {
                         : null
                 }
                 <div class="aw-compose-box">
+                    <input
+                        ref=${fileRef}
+                        type="file"
+                        hidden
+                        multiple=${false}
+                        onChange=${uploadAttachment}
+                    />
+                    <button
+                        class="aw-plus"
+                        type="button"
+                        title=${t("composer.attach")}
+                        aria-label=${t("composer.attach")}
+                        disabled=${!selected || busy || uploading}
+                        onClick=${() => fileRef.current?.click()}
+                    >
+                        ${uploading ? "…" : "+"}
+                    </button>
                     <textarea
                         ref=${requestRef}
                         placeholder=${canSend ? t("composer.placeholder") : t("composer.disabled")}
@@ -2027,7 +2207,7 @@ function App() {
                     ${t("tabs.close")}
                 </button>
             </div>
-            <div class="aw-panel">
+            <div class="aw-panel" data-tone=${rail === "history" ? "session" : rail === "settings" ? "progress" : panel}>
                 ${
                     !selected
                         ? html`<${Section} title=${t("empty.nothingOpen")}>
@@ -2047,7 +2227,11 @@ function App() {
                                     ? html`<${SessionPanel} view=${view} status=${status} />`
                                     : panel === "actions"
                                       ? html`<${ActionsPanel} view=${view} />`
-                                      : html`<${FilesPanel} label=${selected} enabled=${Boolean(selected)} />`
+                                      : html`<${FilesPanel}
+                              label=${selected}
+                              enabled=${Boolean(selected)}
+                              version=${filesVersion}
+                          />`
                 }
             </div>
         </aside>

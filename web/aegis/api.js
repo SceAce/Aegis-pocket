@@ -74,6 +74,10 @@ export const api = {
     pause: (label) => call("POST", `/api/experiments/${encodeURIComponent(label)}/pause`, {}),
     resume: (label) => call("POST", `/api/experiments/${encodeURIComponent(label)}/resume`, {}),
     stop: (label) => call("POST", `/api/experiments/${encodeURIComponent(label)}/stop`, {}),
+    models: () => call("GET", "/api/models"),
+    tools: () => call("GET", "/api/tools"),
+    upload: (label, body) =>
+        call("POST", `/api/experiments/${encodeURIComponent(label)}/attachments`, body),
     files: (label, path = "") =>
         call(
             "GET",
