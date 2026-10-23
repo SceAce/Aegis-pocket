@@ -71,6 +71,8 @@ export const api = {
             text,
             request_id: requestId,
         }),
+    setThinking: (label, body) =>
+        call("POST", `/api/experiments/${encodeURIComponent(label)}/thinking`, body),
     liveModels: (label) => call("GET", `/api/experiments/${encodeURIComponent(label)}/models`),
     setModel: (label, body) =>
         call("POST", `/api/experiments/${encodeURIComponent(label)}/model`, body),

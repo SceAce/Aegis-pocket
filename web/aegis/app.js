@@ -1462,6 +1462,7 @@ function NewTaskDialog({ onClose, onCreated, defaults }) {
     const [catalog, setCatalog] = useState(null);
     const [toolCatalog, setToolCatalog] = useState(null);
     const [tools, setTools] = useState(null);
+    const [thinking, setThinking] = useState("");
 
     useEffect(() => {
         api.models()
@@ -1514,6 +1515,7 @@ function NewTaskDialog({ onClose, onCreated, defaults }) {
                 provider: provider.trim() || undefined,
                 model: model.trim() || undefined,
                 tools: Array.isArray(tools) && tools.length > 0 ? tools : undefined,
+                thinking: thinking || undefined,
             });
             onCreated(label.trim());
         } catch (err) {
@@ -1616,6 +1618,17 @@ function NewTaskDialog({ onClose, onCreated, defaults }) {
                           <div class="aw-faint">${t("dialog.modelsUnavailable")}</div>
                       <//>`
             }
+            <div class="aw-field">
+                <label for="aw-thinking">${t("dialog.thinking")}</label>
+                <select id="aw-thinking" onChange=${(event) => setThinking(event.currentTarget.value)}>
+                    <option value="">${t("dialog.thinkingDefault")}</option>
+                    ${["off", "minimal", "low", "medium", "high", "xhigh", "max"].map(
+                        (level) => html`<option key=${level} value=${level}>
+                            ${t(`thinking.${level}`)}
+                        </option>`,
+                    )}
+                </select>
+            </div>
             ${
                 toolCatalog
                     ? html`<fieldset class="aw-field aw-tools">
@@ -1681,6 +1694,7 @@ function App() {
     const [filesVersion, setFilesVersion] = useState(0);
     const [liveModels, setLiveModels] = useState(null);
     const [modelOpen, setModelOpen] = useState(false);
+    const [thinkingOpen, setThinkingOpen] = useState(false);
     const chatRef = useRef(null);
     const stickRef = useRef(true);
 
@@ -1994,6 +2008,46 @@ function App() {
         }
     };
 
+    /** Set the Session thinking level (session configuration; the SDK clamps it). */
+    const switchThinking = async (level) => {
+        setThinkingOpen(false);
+
+        if (!selected) {
+            return;
+        }
+
+        try {
+            const result = await api.setThinking(selected, { level });
+
+            if (!result.ok) {
+                setBanner({
+                    tone: "warn",
+                    text: t("top.thinkingFailed", {
+                        reason: result.reason ?? t("common.unknown"),
+                    }),
+                });
+
+                return;
+            }
+
+            const effective = result.thinking?.level ?? level;
+
+            setBanner({
+                tone: "info",
+                text:
+                    effective === level
+                        ? t("top.thinkingApplied", { level })
+                        : t("top.thinkingApplied", { level: `${level} → ${effective}` }),
+            });
+            await loadDetail(selected);
+        } catch (error) {
+            setBanner({
+                tone: "warn",
+                text: t("top.thinkingFailed", { reason: apiErrorMessage(error) }),
+            });
+        }
+    };
+
     const uploadAttachment = async (event) => {
         const file = event.currentTarget.files?.[0];
 
@@ -2232,6 +2286,50 @@ function App() {
                                 : null
                         }
                     </div>
+                    ${
+                        status?.thinking?.level
+                            ? html`<div class="aw-pop-host">
+                                  <button
+                                      class="aw-chip aw-chip-button"
+                                      title=${
+                                          status.thinking.supported
+                                              ? t("top.thinkingSwitch")
+                                              : t("top.thinkingUnsupported")
+                                      }
+                                      aria-expanded=${thinkingOpen}
+                                      disabled=${!status.thinking.supported || host.state !== "ready"}
+                                      onClick=${() => setThinkingOpen(!thinkingOpen)}
+                                  >
+                                      ${t("top.thinking", { level: status.thinking.level })}
+                                  </button>
+                                  ${
+                                      thinkingOpen
+                                          ? html`<div
+                                                class="aw-pop"
+                                                role="menu"
+                                                aria-label=${t("top.thinkingSwitch")}
+                                            >
+                                                <div class="aw-pop-head">
+                                                    ${t("top.thinkingSwitch")}
+                                                </div>
+                                                ${(status.thinking.levels ?? []).map(
+                                                    (level) => html`<button
+                                                        key=${level}
+                                                        class="aw-pop-item"
+                                                        role="menuitem"
+                                                        aria-current=${status.thinking.level === level}
+                                                        onClick=${() => switchThinking(level)}
+                                                    >
+                                                        <span>${t(`thinking.${level}`)}</span>
+                                                        <span class="aw-faint">${level}</span>
+                                                    </button>`,
+                                                )}
+                                            </div>`
+                                          : null
+                                  }
+                              </div>`
+                            : null
+                    }
                     ${
                         view?.session?.context?.known
                             ? html`<${Chip}
