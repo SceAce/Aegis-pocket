@@ -1191,3 +1191,71 @@ button.aw-pop-item[aria-current="true"] {
     background: var(--raised);
     box-shadow: inset 2px 0 0 var(--accent);
 }
+
+/* ── "working" liveness indicator ─────────────────────────── */
+/* Silence is normal while a model or a long tool runs; this is the difference
+   between "still working" and "the run died". */
+.aw-working {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 12px;
+    margin: 0 auto;
+    max-width: 900px;
+    font: 11.5px / 1.4 var(--mono);
+    color: var(--muted);
+    border: 1px dashed color-mix(in srgb, var(--accent) 34%, var(--line));
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.aw-working .aw-faint {
+    color: var(--faint);
+}
+
+.aw-spinner {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-top-color: var(--accent);
+    animation: aw-spin 0.9s linear infinite;
+    flex: 0 0 auto;
+}
+
+@keyframes aw-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .aw-spinner {
+        animation: none;
+        border-top-color: var(--accent);
+        opacity: 0.8;
+    }
+}
+
+/* A small live dot inside the console chip. */
+.aw-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    margin-right: 6px;
+    animation: aw-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes aw-pulse {
+    0%,
+    100% {
+        opacity: 0.35;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}

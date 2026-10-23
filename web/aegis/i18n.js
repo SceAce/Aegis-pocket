@@ -275,6 +275,9 @@ const DICT = {
         "settings.safetyReadonly": "只读说明",
         "settings.safetyReadonlyNote":
             "安全边界不是可编辑设置：它由 Host 契约固定，界面只负责显示；能修改的部分是上面的主题与语言。",
+        "working.line": "工作中 · {seconds}s",
+        "working.quiet": "仍在运行，暂无新输出",
+        "working.hint": "Host 正在驱动这一轮（模型/工具尚未提交新事件也算在工作）",
         "top.thinking": "思考 {level}",
         "top.thinkingSwitch": "切换思考等级",
         "top.thinkingApplied": "思考等级已切换到 {level}",
@@ -684,6 +687,10 @@ const DICT = {
         "settings.safetyReadonly": "read-only note",
         "settings.safetyReadonlyNote":
             "The safety boundary is not an editable setting: the Host contract fixes it and the UI only displays it. Theme and language above are the editable parts.",
+        "working.line": "working · {seconds}s",
+        "working.quiet": "still running — no new output yet",
+        "working.hint":
+            "the Host is driving this turn (silence while the model or a tool runs is normal)",
         "top.thinking": "thinking {level}",
         "top.thinkingSwitch": "Switch thinking level",
         "top.thinkingApplied": "thinking level set to {level}",

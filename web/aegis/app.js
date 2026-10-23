@@ -1695,6 +1695,7 @@ function App() {
     const [liveModels, setLiveModels] = useState(null);
     const [modelOpen, setModelOpen] = useState(false);
     const [thinkingOpen, setThinkingOpen] = useState(false);
+    const [, setTick] = useState(0);
     const chatRef = useRef(null);
     const stickRef = useRef(true);
 
@@ -1917,6 +1918,22 @@ function App() {
     }, [selected, detail?.host?.state, detail?.status?.session_id]);
 
     const status = detail?.status ?? null;
+    const working = status?.working?.active === true || busy;
+    const workingSince = status?.working?.started_at ? Date.parse(status.working.started_at) : null;
+
+    useEffect(() => {
+        if (!working) {
+            return undefined;
+        }
+
+        const timer = setInterval(() => setTick((value) => value + 1), 1000);
+
+        return () => clearInterval(timer);
+    }, [working]);
+
+    const workingSeconds = workingSince
+        ? Math.max(0, Math.round((Date.now() - workingSince) / 1000))
+        : null;
     const view = detail?.view ?? null;
     const host = detail?.host ?? { state: "stopped" };
     const phase = status?.console_status ?? host.state;
@@ -2227,7 +2244,9 @@ function App() {
                 </div>
                 <div class="aw-chips">
                     <${Chip} tone=${toneForStatus(phase)}
-                        >${phase ? statusLabel(phase) : t("top.noHost")}<//
+                        >${working ? html`<span class="aw-dot" aria-hidden="true"></span>` : null}${
+                            phase ? statusLabel(phase) : t("top.noHost")
+                        }<//
                     >
                     ${
                         status?.work_unit_state
@@ -2400,6 +2419,25 @@ function App() {
                         : null
                 }
                 ${rows.map((row) => html`<${TranscriptRow} key=${rowKey(row)} row=${row} />`)}
+                ${
+                    working
+                        ? html`<div class="aw-working" role="status" title=${t("working.hint")}>
+                              <span class="aw-spinner" aria-hidden="true"></span>
+                              <span>
+                                  ${
+                                      workingSeconds === null
+                                          ? t("working.line", { seconds: 0 })
+                                          : t("working.line", { seconds: workingSeconds })
+                                  }
+                              </span>
+                              ${
+                                  workingSeconds !== null && workingSeconds >= 15
+                                      ? html`<span class="aw-faint">· ${t("working.quiet")}</span>`
+                                      : null
+                              }
+                          </div>`
+                        : null
+                }
                 ${
                     liveText
                         ? html`<div class="aw-row aw-live">
