@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+        />
+        <meta name="color-scheme" content="dark" />
+        <meta name="theme-color" content="#13141c" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <title>Aegis</title>
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="preload" href="/fonts/Geist.woff2" as="font" type="font/woff2" crossorigin />
+        <link
+            rel="preload"
+            href="/fonts/JetBrainsMono.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin
+        />
+        <!--
+            The visual language is Pi Pocket's own stylesheet (tokens, surfaces, type
+            scale, motion). Aegis adds only its layout on top of those tokens.
+        -->
+        <link rel="stylesheet" href="/style.css" />
+        <link rel="stylesheet" href="/aegis/aegis.css" />
+        <script type="importmap">
+            {
+                "imports": {
+                    "preact": "/vendor/preact.mjs",
+                    "preact/hooks": "/vendor/preact-hooks.mjs",
+                    "htm": "/vendor/htm.mjs",
+                    "marked": "/vendor/marked.mjs",
+                    "dompurify": "/vendor/purify.mjs"
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script>
+            // Bounded, local-only error collector: a smoke test (and the owner) can
+            // read it to see whether the app produced uncaught errors. It never
+            // sends anything anywhere.
+            window.__aegisErrors = [];
+            window.addEventListener("error", function (event) {
+                window.__aegisErrors.push({
+                    kind: "error",
+                    message: String(event.message || event.error || ""),
+                });
+                if (window.__aegisErrors.length > 20) window.__aegisErrors.shift();
+            });
+            window.addEventListener("unhandledrejection", function (event) {
+                window.__aegisErrors.push({
+                    kind: "rejection",
+                    message: String(event.reason || ""),
+                });
+                if (window.__aegisErrors.length > 20) window.__aegisErrors.shift();
+            });
+        </script>
+        <script type="module" src="/aegis/app.js"></script>
+    </body>
+</html>

@@ -2,6 +2,10 @@
 
 Where things are in Pi Pocket, for agents working on it. [index.md](index.md) lists every guide; [AGENTS.md](../AGENTS.md) and [self-editing.md](self-editing.md) have the rules for editing it while it runs; [architecture.md](architecture.md) explains how the parts depend on each other and the orderings they rely on; [features.md](features.md) says what each feature does.
 
+## Aegis Web Console (`web/aegis/`)
+
+`web/aegis/` is not part of the Pi Pocket server: it is a small Preact/htm app shell that reuses this project's stylesheet, fonts, icons and vendored modules, and is served by the Aegis Web Console in the parent repository (`run-experiment-web.sh`). It talks only to Aegis's own `/api/*`, never to Pi Durable or Pocket's routes; the contract lives in `Aegis/docs/WEBUI_CONSOLE.md`. Changing it does not reload Pocket tabs and needs no server restart.
+
 ## Processes
 
 `bin/pi-pocket.js` checks Node, then runs `src/launcher/main.ts`. The launcher reads its options (`options.ts`), asks how devices connect (`access.ts`: this device, LAN, Cloudflare quick tunnel, Tailscale), runs the server (`src/server/main.ts`) as a child, restarts it on exit code 75 or a crash, and keeps the tunnel up. `term.ts` draws its menu, panel, and QR code in the terminal. The server takes the data folder's lock, opens one `PocketApp`, and serves it with `http.ts`.

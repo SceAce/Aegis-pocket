@@ -1,0 +1,865 @@
+/*
+ * Aegis Web Console — layout.
+ *
+ * Reuses Pi Pocket's tokens, surfaces, type scale and motion (see index.html:
+ * `/style.css` is Pocket's own stylesheet). Only the Aegis layout lives here, on
+ * those tokens, so the app keeps the same visual language and responsive feel
+ * instead of introducing a second design system.
+ */
+
+:root {
+    --aw-rail: 64px;
+    --aw-list: 300px;
+    --aw-details: 380px;
+    --aw-touch: 40px;
+}
+
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    background: var(--desk);
+}
+
+#app {
+    height: 100dvh;
+}
+
+.aw-app {
+    display: grid;
+    grid-template-columns: var(--aw-rail) var(--aw-list) minmax(0, 1fr) var(--aw-details);
+    height: 100dvh;
+    min-height: 0;
+    color: var(--body);
+}
+
+/* ── rail ─────────────────────────────────────────────── */
+.aw-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 0;
+    background: var(--bg-dark, var(--bg));
+    border-right: 1px solid var(--hair);
+    min-height: 0;
+}
+
+.aw-rail-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.aw-rail-button {
+    width: 44px;
+    min-height: var(--aw-touch);
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    display: grid;
+    place-items: center;
+    gap: 2px;
+    font: 500 10px / 1.2 var(--sans);
+    cursor: pointer;
+}
+
+.aw-rail-button span.aw-glyph {
+    font-size: 17px;
+    line-height: 1;
+}
+
+.aw-rail-button:hover {
+    background: var(--hover);
+    color: var(--text);
+}
+
+.aw-rail-button[aria-pressed="true"] {
+    background: var(--raised);
+    color: var(--text);
+}
+
+.aw-rail-fill {
+    flex: 1;
+}
+
+/* ── experiment list ──────────────────────────────────── */
+.aw-list {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-right: 1px solid var(--hair);
+    background: var(--bg);
+}
+
+.aw-list-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 12px 8px;
+    border-bottom: 1px solid var(--hair);
+}
+
+.aw-list-head h1 {
+    font: 600 14px / 1.2 var(--sans);
+    margin: 0;
+    color: var(--text);
+    flex: 1;
+}
+
+.aw-list-body {
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+}
+
+.aw-exp {
+    text-align: left;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--body);
+    padding: 9px 10px;
+    min-height: var(--aw-touch);
+    display: grid;
+    gap: 3px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.aw-exp:hover {
+    background: var(--hover);
+}
+
+.aw-exp[aria-current="true"] {
+    background: var(--raised);
+    border-color: var(--line-strong);
+}
+
+.aw-exp-label {
+    font: 600 13px / 1.25 var(--sans);
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aw-exp-meta {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font: 11px / 1.3 var(--mono);
+    color: var(--muted);
+    flex-wrap: wrap;
+}
+
+.aw-empty {
+    color: var(--muted);
+    font-size: 13px;
+    padding: 12px;
+    border: 1px dashed var(--line-strong);
+    border-radius: 10px;
+    text-align: center;
+}
+
+/* ── main ─────────────────────────────────────────────── */
+.aw-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    background: var(--bg);
+}
+
+.aw-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--hair);
+    min-height: 52px;
+    flex-wrap: wrap;
+}
+
+.aw-top-title {
+    display: grid;
+    gap: 1px;
+    min-width: 180px;
+    flex: 1 1 240px;
+}
+
+.aw-top-title strong {
+    font: 600 14px / 1.25 var(--sans);
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aw-top-title span {
+    font: 11px / 1.3 var(--mono);
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aw-chips {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex: 0 1 auto;
+    justify-content: flex-end;
+}
+
+.aw-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 9px;
+    font: 11px / 1.4 var(--mono);
+    color: var(--muted);
+    white-space: nowrap;
+    background: color-mix(in srgb, var(--body) 4%, transparent);
+}
+
+.aw-chip[data-tone="ok"] {
+    color: var(--green);
+    border-color: color-mix(in srgb, var(--green) 40%, transparent);
+}
+
+.aw-chip[data-tone="warn"] {
+    color: var(--yellow);
+    border-color: color-mix(in srgb, var(--yellow) 40%, transparent);
+}
+
+.aw-chip[data-tone="bad"] {
+    color: var(--red);
+    border-color: color-mix(in srgb, var(--red) 40%, transparent);
+}
+
+.aw-chat {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 14px clamp(10px, 3vw, 28px) 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ── transcript ───────────────────────────────────────── */
+.aw-row {
+    display: grid;
+    gap: 4px;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.aw-row[data-kind="episode"] .aw-card,
+.aw-row[data-kind="outcome"] .aw-card {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+
+.aw-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+    padding: 10px 12px;
+    min-width: 0;
+}
+
+.aw-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.aw-card-head strong {
+    font: 600 12px / 1.3 var(--sans);
+    color: var(--text);
+    text-transform: none;
+}
+
+.aw-card-head .aw-when {
+    font: 10px / 1.2 var(--mono);
+    color: var(--faint);
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.aw-body {
+    font-size: 13.5px;
+    color: var(--body);
+    overflow-wrap: anywhere;
+}
+
+.aw-body :is(p, ul, ol, pre, blockquote, table) {
+    margin: 6px 0;
+}
+
+.aw-body pre {
+    background: var(--bg-darker, #0e0e14);
+    border: 1px solid var(--hair);
+    border-radius: 8px;
+    padding: 8px;
+    overflow-x: auto;
+    font: 12px / 1.5 var(--mono);
+}
+
+.aw-body code {
+    font-family: var(--mono);
+    font-size: 0.95em;
+}
+
+.aw-muted {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.aw-faint {
+    color: var(--faint);
+    font: 11px / 1.4 var(--mono);
+}
+
+.aw-user .aw-card {
+    background: color-mix(in srgb, var(--accent) 9%, var(--card));
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+
+.aw-live .aw-card {
+    border-style: dashed;
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+
+.aw-rot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px auto;
+    width: 100%;
+    max-width: 900px;
+    color: var(--muted);
+    font: 11px / 1.3 var(--mono);
+}
+
+.aw-rot::before,
+.aw-rot::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+}
+
+.aw-rot button {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+
+.aw-rot button:hover {
+    background: var(--hover);
+    color: var(--text);
+}
+
+.aw-details-inline {
+    margin-top: 6px;
+    display: grid;
+    gap: 4px;
+    font: 11.5px / 1.45 var(--mono);
+    color: var(--muted);
+    overflow-wrap: anywhere;
+}
+
+/* ── composer ─────────────────────────────────────────── */
+.aw-composer {
+    border-top: 1px solid var(--hair);
+    padding: 10px clamp(10px, 3vw, 28px) 14px;
+    display: grid;
+    gap: 8px;
+    background: var(--bg);
+}
+
+.aw-compose-box {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 6px 8px;
+    background: var(--card);
+}
+
+.aw-compose-box textarea {
+    flex: 1;
+    resize: none;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: 13.5px / 1.5 var(--sans);
+    min-height: 38px;
+    max-height: 180px;
+    padding: 8px 4px;
+    outline: none;
+}
+
+.aw-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+button.aw-btn {
+    min-height: var(--aw-touch);
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line-strong);
+    background: var(--card-2);
+    color: var(--text);
+    font: 600 12.5px / 1 var(--sans);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+button.aw-btn:hover:not(:disabled) {
+    background: var(--raised);
+}
+
+button.aw-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+button.aw-btn[data-tone="primary"] {
+    background: var(--accent);
+    color: var(--accent-ink, #0e0e14);
+    border-color: transparent;
+}
+
+button.aw-btn[data-tone="danger"] {
+    color: var(--red);
+    border-color: color-mix(in srgb, var(--red) 45%, transparent);
+}
+
+button.aw-icon {
+    width: var(--aw-touch);
+    min-width: var(--aw-touch);
+    height: var(--aw-touch);
+    border-radius: 10px;
+    border: 1px solid var(--line-strong);
+    background: var(--card-2);
+    color: var(--text);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+}
+
+/* ── details ──────────────────────────────────────────── */
+.aw-details {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-left: 1px solid var(--hair);
+    background: var(--bg);
+}
+
+.aw-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 6px;
+    border-bottom: 1px solid var(--hair);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.aw-tab {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 8px 10px;
+    min-height: 36px;
+    font: 600 12px / 1.2 var(--sans);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.aw-tab[aria-selected="true"] {
+    background: var(--raised);
+    color: var(--text);
+}
+
+.aw-panel {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+    align-content: start;
+}
+
+.aw-section {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+    padding: 10px 12px;
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.aw-section > h2,
+.aw-section > h3 {
+    margin: 0;
+    font: 600 12px / 1.3 var(--sans);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.aw-kv {
+    display: grid;
+    grid-template-columns: minmax(88px, 34%) minmax(0, 1fr);
+    gap: 4px 10px;
+    font: 11.5px / 1.45 var(--mono);
+    min-width: 0;
+}
+
+.aw-kv dt {
+    color: var(--faint);
+    margin: 0;
+}
+
+.aw-kv dd {
+    margin: 0;
+    color: var(--body);
+    overflow-wrap: anywhere;
+}
+
+.aw-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 7px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    font: 10.5px / 1.6 var(--mono);
+    color: var(--muted);
+}
+
+.aw-badge[data-tone="ok"] {
+    color: var(--green);
+    border-color: color-mix(in srgb, var(--green) 40%, transparent);
+}
+.aw-badge[data-tone="warn"] {
+    color: var(--yellow);
+    border-color: color-mix(in srgb, var(--yellow) 40%, transparent);
+}
+.aw-badge[data-tone="bad"] {
+    color: var(--red);
+    border-color: color-mix(in srgb, var(--red) 40%, transparent);
+}
+.aw-badge[data-tone="info"] {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.aw-list-flat {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-width: 0;
+}
+
+.aw-item {
+    border: 1px solid var(--hair);
+    border-radius: 10px;
+    padding: 8px 9px;
+    background: color-mix(in srgb, var(--body) 3%, transparent);
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.aw-item-head {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.aw-item-head strong {
+    font: 600 12px / 1.3 var(--sans);
+    color: var(--text);
+}
+
+.aw-item p {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--body);
+    overflow-wrap: anywhere;
+}
+
+.aw-scroll-y {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.aw-tree {
+    display: grid;
+    gap: 2px;
+    font: 12px / 1.45 var(--mono);
+}
+
+.aw-tree button {
+    text-align: left;
+    border: 0;
+    background: transparent;
+    color: var(--body);
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    min-height: 32px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+}
+
+.aw-tree button:hover {
+    background: var(--hover);
+}
+
+.aw-tree button[data-dir="true"] {
+    color: var(--accent);
+}
+
+.aw-file-text {
+    margin: 0;
+    max-height: 420px;
+    overflow: auto;
+    background: var(--bg-darker, #0e0e14);
+    border: 1px solid var(--hair);
+    border-radius: 8px;
+    padding: 8px;
+    font: 11.5px / 1.5 var(--mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.aw-banner {
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--red) 40%, transparent);
+    background: color-mix(in srgb, var(--red) 12%, transparent);
+    color: var(--text);
+    padding: 8px 10px;
+    font-size: 12.5px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.aw-banner[data-tone="warn"] {
+    border-color: color-mix(in srgb, var(--yellow) 40%, transparent);
+    background: color-mix(in srgb, var(--yellow) 10%, transparent);
+}
+
+.aw-banner[data-tone="info"] {
+    border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.aw-banner button {
+    margin-left: auto;
+    background: transparent;
+    border: 0;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+}
+
+/* ── new task dialog ──────────────────────────────────── */
+.aw-dialog-scrim {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in srgb, var(--desk) 70%, transparent);
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    z-index: 40;
+}
+
+.aw-dialog {
+    width: min(460px, 100%);
+    border: 1px solid var(--line-strong);
+    border-radius: 16px;
+    background: var(--bg);
+    padding: 16px;
+    display: grid;
+    gap: 10px;
+}
+
+.aw-dialog h2 {
+    margin: 0;
+    font: 600 15px / 1.3 var(--sans);
+    color: var(--text);
+}
+
+.aw-field {
+    display: grid;
+    gap: 4px;
+}
+
+.aw-field label {
+    font: 600 11px / 1.3 var(--sans);
+    color: var(--muted);
+}
+
+.aw-field input {
+    min-height: var(--aw-touch);
+    border-radius: 10px;
+    border: 1px solid var(--line-strong);
+    background: var(--card);
+    color: var(--text);
+    padding: 0 10px;
+    font: 13px / 1.4 var(--mono);
+}
+
+/* ── mobile ───────────────────────────────────────────── */
+/* Hidden on desktop regardless of the .aw-icon/.aw-btn display rules below. */
+.aw-mobile-only {
+    display: none !important;
+}
+
+@media (max-width: 1180px) {
+    :root {
+        --aw-list: 260px;
+        --aw-details: 330px;
+    }
+}
+
+@media (max-width: 1020px) {
+    .aw-app {
+        grid-template-columns: var(--aw-rail) minmax(0, 1fr);
+    }
+
+    .aw-list,
+    .aw-details {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        z-index: 30;
+        width: min(340px, 88vw);
+        transform: translateX(-102%);
+        transition: transform 160ms ease;
+        box-shadow: var(--sh, 0 10px 40px rgba(0, 0, 0, 0.5));
+    }
+
+    .aw-list {
+        left: var(--aw-rail);
+    }
+
+    .aw-details {
+        right: 0;
+        left: auto;
+        transform: translateX(102%);
+    }
+
+    .aw-app[data-drawer="list"] .aw-list {
+        transform: translateX(0);
+    }
+
+    .aw-app[data-drawer="details"] .aw-details {
+        transform: translateX(0);
+    }
+
+    .aw-icon.aw-mobile-only {
+        display: grid !important;
+    }
+
+    .aw-tab.aw-mobile-only {
+        display: inline-flex !important;
+    }
+}
+
+@media (max-width: 620px) {
+    .aw-rail {
+        flex-direction: row;
+        width: auto;
+        height: 56px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-right: 0;
+        border-top: 1px solid var(--hair);
+        justify-content: space-around;
+        padding: 0 6px;
+        z-index: 35;
+    }
+
+    .aw-rail-mark,
+    .aw-rail-fill {
+        display: none;
+    }
+
+    .aw-app {
+        grid-template-columns: minmax(0, 1fr);
+        padding-bottom: 56px;
+    }
+
+    .aw-list {
+        left: 0;
+    }
+
+    .aw-rail-button {
+        flex: 1;
+        max-width: 88px;
+    }
+
+    .aw-top {
+        min-height: 48px;
+        gap: 6px;
+    }
+
+    .aw-chip {
+        font-size: 10.5px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .aw-list,
+    .aw-details {
+        transition: none;
+    }
+}
